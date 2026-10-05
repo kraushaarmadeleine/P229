@@ -23,17 +23,33 @@
 dbutils.library.restartPython()
 
 # COMMAND ----------
-# Zelle 1: Pfade. REPO_PATH anpassen: Ordner, in dem p229/ liegt (Git-Ordner in Databricks).
-import sys, time
+# Zelle 1: Pfade und Code finden. Nichts anpassen nötig, wenn eine der beiden Varianten unten erfüllt ist:
+#  A) Das Repo ist ein Git-Ordner im Workspace und dieses Notebook liegt darin (Unterordner notebooks/).
+#  B) Die Datei p229_code.zip liegt im Volume (BASE_PATH), dann wird sie automatisch entpackt.
+import os, sys, time, zipfile
 import numpy as np, pandas as pd
-
-REPO_PATH = "/Workspace/Users/<DEIN-USER>/P229"          # <-- anpassen
-sys.path.insert(0, REPO_PATH)
 
 BASE_PATH = "/Volumes/dev_workspace/p229/p229_files"
 OUT = f"{BASE_PATH}/output"
 ARGUS_XLSX = f"{BASE_PATH}/Heizoel und Diesel bis 2016 und ICE Daten.xlsx"
 MARKT_XLSX = f"{BASE_PATH}/P229 - Daten von Brent, WTI, Heizöl, Wechselkurs.xlsx"
+
+def finde_code():
+    p = os.getcwd()
+    for _ in range(4):                                   # Variante A: vom Notebook-Ordner nach oben suchen
+        if os.path.isdir(os.path.join(p, "p229")):
+            return p
+        p = os.path.dirname(p)
+    zip_pfad = f"{BASE_PATH}/p229_code.zip"              # Variante B: Zip im Volume
+    if os.path.exists(zip_pfad):
+        ziel = "/tmp/p229_code"
+        zipfile.ZipFile(zip_pfad).extractall(ziel)
+        return ziel
+    raise FileNotFoundError("Ordner p229/ nicht gefunden. Weder Git-Ordner (A) noch p229_code.zip im Volume (B).")
+
+CODE_PATH = finde_code()
+sys.path.insert(0, CODE_PATH)
+print("Code gefunden in:", CODE_PATH)
 
 from p229.config import SERIES, EXO, DEV, TEST, SCEN, LAST_ARGUS
 from p229.data import inspect_excel, load_argus_excel, load_market_sheet, build_dataset
