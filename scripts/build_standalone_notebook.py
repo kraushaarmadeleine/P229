@@ -11,8 +11,9 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[1]
 import sys
 FILES = ["__init__", "config", "stats", "features", "leakage", "walk_forward", "evaluate", "data", "models"]
-QUELLE = sys.argv[1] if len(sys.argv) > 1 else "db_09_neuaufbau"
-ZIEL = sys.argv[2] if len(sys.argv) > 2 else "db_09_komplett"
+ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
+QUELLE = ARGS[0] if len(ARGS) > 0 else "db_09_neuaufbau"
+ZIEL = ARGS[1] if len(ARGS) > 1 else "db_09_komplett"
 
 src = [l for l in (root / f"notebooks/{QUELLE}.py").read_text().split("\n") if l != "# Databricks notebook source"]
 blocks, cur = [], []
@@ -47,7 +48,8 @@ for n in FILES:
 parts += ["for name, text in FILES.items():",
           '    open(f"/tmp/p229_code/p229/{name}.py", "w").write(text)',
           'print("Code angelegt:", sorted(os.listdir("/tmp/p229_code/p229")))']
-cells.insert(3, ("code", "\n".join(parts)))
+if "--ohne-code" not in sys.argv:
+    cells.insert(3, ("code", "\n".join(parts)))
 
 out = []
 for kind, text in cells:
