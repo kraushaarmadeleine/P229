@@ -39,3 +39,16 @@ def test_standard_ohne_fabrik_ist_unveraendert(d):
     a = walk_forward(d, H, F, window, params=p)
     b = walk_forward(d, H, F, window, model_factory=lambda: __import__("xgboost").XGBClassifier(**p))
     assert np.allclose(a["proba"], b["proba"])
+
+
+def test_zufallstest_zerstoert_das_signal(d):
+    """Echtes Ziel: deutlich über 50 %. Verschobenes Ziel (Placebo): um 50 %."""
+    from p229.evaluate import evaluate_run
+    p = dict(max_depth=2, n_estimators=20, learning_rate=0.1, eval_metric="logloss", random_state=42)
+    F = build_features(d, H)
+    window = (d["date"].iloc[1400], d["date"].iloc[1600])
+    echt = evaluate_run(d, H, F, walk_forward(d, H, F, window, params=p), 0, 0)["DA"]
+    plac = [evaluate_run(d, H, F, walk_forward(d, H, F, window, params=p, label_shift=k), 0, 0)["DA"] for k in (90, 250, 500)]
+    assert echt > 0.6
+    assert 0.40 < np.mean(plac) < 0.60
+    assert echt - np.mean(plac) > 0.08

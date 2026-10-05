@@ -6,7 +6,7 @@ from .config import HORIZON, REG
 
 
 def walk_forward(d, H, F, window, entry_lag=0, feat_lag=0, retrain_every=5, params=REG, horizon=HORIZON,
-                 model_factory=None):
+                 model_factory=None, label_shift=0):
     """Gepurgter Walk-Forward (expanding window).
 
     d: Datentabelle (Spalte date + Preisspalten), F: Features zu d, window: (start, ende).
@@ -15,11 +15,15 @@ def walk_forward(d, H, F, window, entry_lag=0, feat_lag=0, retrain_every=5, para
     last = i - horizon - feat_lag.
     model_factory: Funktion ohne Argumente, die ein frisches Modell (fit/predict_proba) liefert.
     Ohne Angabe: XGBClassifier(**params) wie in db_08.
+    label_shift: Zufallstest (Placebo). Zeile j bekommt das Label von Zeile j - label_shift, die Beziehung
+    zwischen Merkmalen und Ziel ist damit zerstört. 0 = echtes Ziel. Es werden nur frühere Labels verwendet.
     """
     feats = [c for c in F.columns if c != "date"]
     P = d[H].astype(float)
     p0, p1 = P.shift(-entry_lag), P.shift(-horizon)
     y = (p1 > p0).astype(float).where(p0.notna() & p1.notna())
+    if label_shift:                                   # Placebo; Zeilen ohne echtes Label (Datenende) bleiben leer
+        y = y.shift(label_shift).where(y.notna())
     X = F[feats].shift(feat_lag).values.astype(float)
     yv = y.values
     idx = np.where((d["date"] >= window[0]) & (d["date"] <= window[1]))[0]
