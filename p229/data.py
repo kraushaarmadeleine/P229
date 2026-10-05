@@ -94,12 +94,14 @@ def load_market_sheet(path, sheet, name, date_col=None, value_col=None, header_r
         value_col = int(np.argmax(num))
     out = pd.DataFrame({"date": dt[date_col], name: pd.to_numeric(raw[value_col], errors="coerce")})
     out = out.dropna(subset=["date", name])
-    out = out[out["date"] >= "1990-01-01"].drop_duplicates("date", keep="last").sort_values("date")
+    out = out[out["date"] >= "1900-01-01"].drop_duplicates("date", keep="last").sort_values("date")
     first_row = out.index.min()
     out = out.reset_index(drop=True)
     if not return_info:
         return out
-    kopf = lambda c: " | ".join(raw.loc[: first_row - 1, c].dropna().astype(str).str.slice(0, 40).tolist()[-3:])
+    def kopf(c):                                           # Textzellen oberhalb der ersten Daten (z. B. Reihenname)
+        txt = [str(x)[:40] for x in raw.loc[: first_row - 1, c] if isinstance(x, str)]
+        return " | ".join(txt[-3:])
     info = {"Variable": name, "Blatt": sheet, "Datumsspalte": date_col + 1, "Wertspalte": value_col + 1,
             "Kopfzeile Wert": kopf(value_col), "Tage": len(out),
             "erster": out["date"].min().date(), "letzter": out["date"].max().date(),

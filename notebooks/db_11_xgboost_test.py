@@ -36,7 +36,7 @@ MARKT_XLSX = f"{BASE_PATH}/P229 - Daten von Brent, WTI, Heizöl, Wechselkurs.xls
 
 sys.path.insert(0, "/tmp/p229_code")
 from p229.config import SERIES, EXO, DEV, TEST, SCEN, LAST_ARGUS
-from p229.data import load_argus_excel, load_market_sheet, build_dataset
+from p229.data import load_argus_excel, load_market_sheet, build_dataset, inspect_excel
 from p229.features import build_features
 from p229.leakage import leak_test
 from p229.walk_forward import walk_forward
@@ -64,6 +64,8 @@ print("\n=== Marktdaten-Excel:", os.path.basename(MARKT_XLSX), "===")
 print(pd.DataFrame(markt_info).to_string(index=False))
 print("\n=== Fehlende Werte vor und nach dem Vorwärtsfüllen (max. 5 Tage) ===")
 print(fuell_bericht.to_string())
+print("\n=== Rohe Kopfzeilen der Marktdaten-Excel (erste 4 Zeilen je Blatt, zeigt die Original-Reihennamen) ===")
+inspect_excel(MARKT_XLSX, n=0)
 print("\nGenutzte Variablen: 8 Preisreihen (Argus-Index, Euro/100 l) + ICE Gasoil (USD/t), Brent, WTI, NYMEX Heating Oil, USD/EUR")
 print("Nicht genutzt: Argus 'all regions', low/high-Werte, OMR-Übersicht 2017, Platts, Nachrichten, Rheinfracht")
 
