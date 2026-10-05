@@ -1,17 +1,19 @@
 """Erzeugt Präsentationsgrafiken (PNG, 16:9) aus den Ergebnissen von db_10 und db_11.
 
 Die Zahlen sind aus den Ausgaben der Notebooks übernommen (db_11 Zelle 5 bis 7, db_10 Zelle 5).
-Aufruf (Repo-Ordner): python scripts/make_charts.py
-Benötigt: pip install matplotlib
+Aufruf (Terminal im Ordner dieser Datei): python make_charts.py
+Die PNG-Dateien landen im Unterordner "grafiken". Anderer Zielordner: python make_charts.py MEIN_ORDNER
+Benötigt: pip install matplotlib numpy
 """
 import os
+import sys
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-OUT = os.path.join(os.path.dirname(__file__), "..", "docs", "grafiken")
+OUT = sys.argv[1] if len(sys.argv) > 1 else "grafiken"
 os.makedirs(OUT, exist_ok=True)
 
 # Farben (validiert, helle Fläche): Serie 1 blau, Serie 2 orange; Neutraltöne für Referenzen
