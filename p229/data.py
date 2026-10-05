@@ -29,7 +29,8 @@ def _serie_name(desc):
     return None
 
 
-def load_argus_excel(path, sheet="Tabelle1"):
+def load_argus_excel(path, sheet="Tabelle1", return_info=False):
+    """Argus-Excel laden. Mit return_info=True zusätzlich eine Tabelle: welche Spalte wurde welcher Serie zugeordnet."""
     raw = pd.read_excel(path, sheet_name=sheet, header=None)
     head = raw.iloc[1]                                   # Zeile 2: Beschreibungen
     body = raw.iloc[2:].copy()
@@ -46,7 +47,21 @@ def load_argus_excel(path, sheet="Tabelle1"):
     fehlt = [c for c in SERIES + ["ice_gasoil"] if c not in df.columns]
     if fehlt:
         raise ValueError(f"Argus-Spalten nicht erkannt: {fehlt}")
-    return df.drop_duplicates("date", keep="last").reset_index(drop=True)
+    df = df.drop_duplicates("date", keep="last").reset_index(drop=True)
+    if not return_info:
+        return df
+    rows = []
+    for j, n in cols.items():
+        if n == "date":
+            continue
+        v = df[n]
+        rows.append({"Serie": n, "Excel-Spalte": j + 1, "Beschreibung": str(head.iloc[j])[:110],
+                     "Tage": int(v.notna().sum()), "fehlend": int(v.isna().sum()),
+                     "erster": df.loc[v.first_valid_index(), "date"].date(),
+                     "letzter": df.loc[v.last_valid_index(), "date"].date(),
+                     "Min": round(float(v.min()), 3), "Max": round(float(v.max()), 3),
+                     "letzter Wert": round(float(v.dropna().iloc[-1]), 3)})
+    return df, pd.DataFrame(rows)
 
 
 def inspect_excel(path, n=6):
@@ -58,7 +73,7 @@ def inspect_excel(path, n=6):
         print(df.head(n + 4).to_string(max_colwidth=40))
 
 
-def load_market_sheet(path, sheet, name, date_col=None, value_col=None, header_row=None):
+def load_market_sheet(path, sheet, name, date_col=None, value_col=None, header_row=None, return_info=False):
     """Ein Marktdaten-Blatt als Serie `name`.
 
     Ohne Angabe wird das Blatt automatisch gelesen: erste Spalte mit Datumswerten, danach die
@@ -80,7 +95,17 @@ def load_market_sheet(path, sheet, name, date_col=None, value_col=None, header_r
     out = pd.DataFrame({"date": dt[date_col], name: pd.to_numeric(raw[value_col], errors="coerce")})
     out = out.dropna(subset=["date", name])
     out = out[out["date"] >= "1990-01-01"].drop_duplicates("date", keep="last").sort_values("date")
-    return out.reset_index(drop=True)
+    first_row = out.index.min()
+    out = out.reset_index(drop=True)
+    if not return_info:
+        return out
+    kopf = lambda c: " | ".join(raw.loc[: first_row - 1, c].dropna().astype(str).str.slice(0, 40).tolist()[-3:])
+    info = {"Variable": name, "Blatt": sheet, "Datumsspalte": date_col + 1, "Wertspalte": value_col + 1,
+            "Kopfzeile Wert": kopf(value_col), "Tage": len(out),
+            "erster": out["date"].min().date(), "letzter": out["date"].max().date(),
+            "Min": round(float(out[name].min()), 4), "Max": round(float(out[name].max()), 4),
+            "letzter Wert": round(float(out[name].iloc[-1]), 4)}
+    return out, info
 
 
 def build_dataset(argus, markt, max_ffill=5):

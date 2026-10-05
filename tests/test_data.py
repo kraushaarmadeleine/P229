@@ -48,3 +48,14 @@ def test_argus_loader_und_build(tmp_path):
     assert set(SERIES + EXO) <= set(d.columns)
     assert bericht["fehlend_vor_ffill"]["brent"] == 1          # letzter Tag fehlt, wird vorwärts gefüllt
     assert len(d) == 30 and d[SERIES + EXO].notna().all().all()
+
+
+def test_protokoll_info(tmp_path):
+    p = tmp_path / "argus.xlsx"
+    dates = _mini_argus(p)
+    a, info = load_argus_excel(p, return_info=True)
+    assert len(info) == 9 and set(info["Serie"]) >= set(SERIES) and (info["Tage"] == 30).all()
+    m = tmp_path / "markt.xlsx"
+    pd.DataFrame({"Datum": dates, "Preis USD/bbl": np.linspace(50, 60, 30)}).to_excel(m, sheet_name="Brent", index=False, startrow=2)
+    out, i = load_market_sheet(m, "Brent", "brent", return_info=True)
+    assert i["Tage"] == 30 and i["Wertspalte"] == 2 and "Preis" in i["Kopfzeile Wert"]
