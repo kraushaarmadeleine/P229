@@ -1,6 +1,7 @@
-"""Baut notebooks/db_09_komplett.ipynb: db_09 mit dem gesamten p229-Code eingebettet.
+"""Baut ein eigenständiges Notebook mit eingebettetem p229-Code.
 
-Aufruf (Repo-Ordner): python scripts/build_standalone_notebook.py
+Aufruf (Repo-Ordner): python scripts/build_standalone_notebook.py [quelle] [ziel]
+Beispiel: python scripts/build_standalone_notebook.py db_10_modellvergleich db_10_modellvergleich_komplett
 Für Umgebungen ohne Git und ohne Datei-Upload: nur dieses eine Notebook importieren.
 """
 import json
@@ -8,9 +9,12 @@ import re
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
-FILES = ["__init__", "config", "stats", "features", "leakage", "walk_forward", "evaluate", "data"]
+import sys
+FILES = ["__init__", "config", "stats", "features", "leakage", "walk_forward", "evaluate", "data", "models"]
+QUELLE = sys.argv[1] if len(sys.argv) > 1 else "db_09_neuaufbau"
+ZIEL = sys.argv[2] if len(sys.argv) > 2 else "db_09_komplett"
 
-src = [l for l in (root / "notebooks/db_09_neuaufbau.py").read_text().split("\n") if l != "# Databricks notebook source"]
+src = [l for l in (root / f"notebooks/{QUELLE}.py").read_text().split("\n") if l != "# Databricks notebook source"]
 blocks, cur = [], []
 for l in src + ["# COMMAND ----------"]:
     if l.strip() == "# COMMAND ----------":
@@ -52,5 +56,5 @@ for kind, text in cells:
     else:
         out.append({"cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [], "source": text})
 nb = {"cells": out, "metadata": {"language_info": {"name": "python"}}, "nbformat": 4, "nbformat_minor": 5}
-(root / "notebooks/db_09_komplett.ipynb").write_text(json.dumps(nb, indent=1, ensure_ascii=False))
+(root / f"notebooks/{ZIEL}.ipynb").write_text(json.dumps(nb, indent=1, ensure_ascii=False))
 print("fertig,", len(out), "Zellen")
