@@ -35,6 +35,8 @@ ARGUS_XLSX = f"{BASE_PATH}/Heizoel und Diesel bis 2016 und ICE Daten.xlsx"
 MARKT_XLSX = f"{BASE_PATH}/P229 - Daten von Brent, WTI, Heizöl, Wechselkurs.xlsx"
 
 def finde_code():
+    if os.path.isdir("/tmp/p229_code/p229"):             # Variante C: Code wurde per Zelle 0 angelegt
+        return "/tmp/p229_code"
     p = os.getcwd()
     for _ in range(4):                                   # Variante A: vom Notebook-Ordner nach oben suchen
         if os.path.isdir(os.path.join(p, "p229")):
