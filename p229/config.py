@@ -15,3 +15,7 @@ REG = dict(max_depth=2, n_estimators=150, learning_rate=0.03, min_child_weight=1
 SCEN = {"S0 (Kauf zu Preis t)": (0, 0),
         "S1 (Kauf zu Preis t+1)": (1, 0),
         "S2 (Daten nur bis t-1)": (0, 1)}
+
+SERIEN_NAMEN = {"heizoel_sued": "Heizöl Süd", "heizoel_suedwest": "Heizöl Südwest", "heizoel_suedost": "Heizöl Südost",
+                "heizoel_rheinmain": "Heizöl Rhein-Main", "diesel_sued": "Diesel Süd", "diesel_suedwest": "Diesel Südwest",
+                "diesel_suedost": "Diesel Südost", "diesel_rheinmain": "Diesel Rhein-Main"}

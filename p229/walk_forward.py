@@ -6,7 +6,7 @@ from .config import HORIZON, REG
 
 
 def walk_forward(d, H, F, window, entry_lag=0, feat_lag=0, retrain_every=5, params=REG, horizon=HORIZON,
-                 model_factory=None, label_shift=0):
+                 model_factory=None, label_shift=0, keep_unlabeled=False):
     """Gepurgter Walk-Forward (expanding window).
 
     d: Datentabelle (Spalte date + Preisspalten), F: Features zu d, window: (start, ende).
@@ -15,6 +15,7 @@ def walk_forward(d, H, F, window, entry_lag=0, feat_lag=0, retrain_every=5, para
     last = i - horizon - feat_lag.
     model_factory: Funktion ohne Argumente, die ein frisches Modell (fit/predict_proba) liefert.
     Ohne Angabe: XGBClassifier(**params) wie in db_08.
+    keep_unlabeled: True = auch Tage ohne bekanntes Ergebnis zurückgeben (y_true = NaN), z. B. die letzten 3 Tage.
     label_shift: Zufallstest (Placebo). Zeile j bekommt das Label von Zeile j - label_shift, die Beziehung
     zwischen Merkmalen und Ziel ist damit zerstört. 0 = echtes Ziel. Es werden nur frühere Labels verwendet.
     """
@@ -36,4 +37,6 @@ def walk_forward(d, H, F, window, entry_lag=0, feat_lag=0, retrain_every=5, para
             model = (model_factory() if model_factory else XGBClassifier(**params)).fit(Xt[m], yt[m])
         proba.append(model.predict_proba(X[i:i + 1])[0, 1])
     res = pd.DataFrame({"date": d["date"].values[idx], "y_true": yv[idx], "proba": proba})
+    if keep_unlabeled:
+        return res.reset_index(drop=True)
     return res.dropna(subset=["y_true"]).reset_index(drop=True)
