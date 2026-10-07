@@ -10,7 +10,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 import sys
-FILES = ["__init__", "config", "stats", "features", "leakage", "walk_forward", "evaluate", "data", "models"]
+FILES = ["__init__", "config", "stats", "features", "leakage", "walk_forward", "evaluate", "data", "models", "beobachten"]
 ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
 QUELLE = ARGS[0] if len(ARGS) > 0 else "db_09_neuaufbau"
 ZIEL = ARGS[1] if len(ARGS) > 1 else "db_09_komplett"
